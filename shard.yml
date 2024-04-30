@@ -1,0 +1,13 @@
+name: woozy
+version: 0.1.0
+
+authors:
+  - azurelmao <de_arcane@protonmail.com>
+
+dependencies:
+  protobuf:
+    github: jeromegn/protobuf.cr
+
+crystal: '>= 1.11.2'
+
+license: MIT

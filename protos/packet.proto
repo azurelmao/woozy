@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package woozy;
+
+message Packet {
+  oneof packet {
+    ClientHandshakePacket client_handshake_packet = 2;
+    ServerHandshakePacket server_handshake_packet = 3;
+    ClientDisconnectPacket client_disconnect_packet = 4;
+    ServerDisconnectPacket server_disconnect_packet = 5;
+  }
+  optional double timestamp = 1;
+}
+
+message ClientHandshakePacket {
+  optional string username = 1;
+}
+
+message ServerHandshakePacket {}
+
+message ClientDisconnectPacket {}
+
+message ServerDisconnectPacket {
+  optional string cause = 1;
+}
