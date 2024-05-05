@@ -1,3 +1,4 @@
+require "socket"
 require "./**"
 
 module Woozy
@@ -32,5 +33,23 @@ module Woozy
         return nil
       end
     end
+
+    {% begin %}
+    {% packets = ::Protobuf::Message.includers.select { |t| t.name.starts_with?("Woozy") && t.name.stringify != "Woozy::Packet" } %}
+
+    alias Packets = Union({{packets.splat}})
+
+    {% for packet in packets %}
+      def self.new(packet : {{packet.id}})
+        Packet.new {{packet.name.split("::").last.underscore.id}}: packet
+      end
+    {% end %}
+    {% end %}
+  end
+end
+
+class TCPSocket
+  def send(packet : Woozy::Packet::Packets)
+    send Woozy::Packet.new packet
   end
 end

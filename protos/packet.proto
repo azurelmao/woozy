@@ -8,6 +8,7 @@ message Packet {
     ServerHandshakePacket server_handshake_packet = 3;
     ClientDisconnectPacket client_disconnect_packet = 4;
     ServerDisconnectPacket server_disconnect_packet = 5;
+    ClientMessagePacket client_message_packet = 6;
   }
   optional double timestamp = 1;
 }
@@ -18,8 +19,14 @@ message ClientHandshakePacket {
 
 message ServerHandshakePacket {}
 
-message ClientDisconnectPacket {}
+message ClientDisconnectPacket {
+  optional string cause = 1;
+}
 
 message ServerDisconnectPacket {
   optional string cause = 1;
+}
+
+message ClientMessagePacket {
+  optional string message = 1;
 }
