@@ -5,7 +5,7 @@ module Woozy
   Id = Namespace.for("woozy")
 
   Log.setup do |log|
-    dispatcher = Log::DispatchMode::Direct
+    dispatcher = Log::DispatchMode::Sync
     backend = Log::IOBackend.new(dispatcher: dispatcher, formatter: Format)
 
     log.bind "*", :trace, backend
@@ -21,17 +21,6 @@ module Woozy
 
     def self.from_bytes(bytes : Bytes) : Packet
       Packet.from_protobuf(IO::Memory.new(bytes))
-    end
-
-    def self.from_socket(socket : TCPSocket) : Packet?
-      begin
-        return nil if socket.closed?
-        bytes = Bytes.new(Packet::MaxSize)
-        socket.receive(bytes)
-        Packet.from_bytes(bytes)
-      rescue ex : IO::Error
-        return nil
-      end
     end
 
     {% begin %}
