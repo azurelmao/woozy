@@ -22,7 +22,7 @@ struct Woozy::Format
     io << ']'
     io << ' '
 
-      io << severity if severity
+    io << severity if severity
     io << ' '
     io << '-'
     io << ' '
@@ -59,6 +59,7 @@ struct Woozy::Format
       if backtrace = exception.backtrace?
         backtrace.each do |frame|
           io << '\n'
+          io << "  from "
           io << frame
         end
       end

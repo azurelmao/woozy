@@ -39,6 +39,6 @@ end
 
 class TCPSocket
   def send(packet : Woozy::Packet::Packets)
-    send Woozy::Packet.new packet
+    send(Woozy::Packet.new(packet))
   end
 end
