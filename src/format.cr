@@ -35,6 +35,9 @@ struct Woozy::Format
 
     if exception = entry.exception
       io << exception.message
+      io << '('
+      io << exception.class.name
+      io << ')'
     else
       io << entry.message
     end
@@ -49,8 +52,10 @@ struct Woozy::Format
         io << '\n'
         io << '-'
         io << ' '
-        io << "#{name}:".to_s.ljust(max_size + 1)
-        io << ' '
+        unless name.to_s.starts_with?('u')
+          io << "#{name}:".to_s.ljust(max_size + 1)
+          io << ' '
+        end
         io << value
       end
     end

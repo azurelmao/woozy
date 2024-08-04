@@ -8,7 +8,10 @@ message Packet {
     ServerHandshakePacket server_handshake_packet = 3;
     ClientDisconnectPacket client_disconnect_packet = 4;
     ServerDisconnectPacket server_disconnect_packet = 5;
-    ClientMessagePacket client_message_packet = 6;
+    ServerBroadcastMessagePacket server_broadcast_message_packet = 6;
+    ClientBroadcastMessagePacket client_broadcast_message_packet = 7;
+    ServerPrivateMessagePacket server_private_message_packet = 8;
+    ClientPrivateMessagePacket client_private_message_packet = 9;
   }
   optional double timestamp = 1;
 }
@@ -27,6 +30,21 @@ message ServerDisconnectPacket {
   optional string cause = 1;
 }
 
-message ClientMessagePacket {
+message ServerBroadcastMessagePacket {
+  optional string sender = 1;
+  optional string message = 2;
+}
+
+message ClientBroadcastMessagePacket {
   optional string message = 1;
+}
+
+message ServerPrivateMessagePacket {
+  optional string sender = 1;
+  optional string message = 2;
+}
+
+message ClientPrivateMessagePacket {
+  optional string recipient = 1;
+  optional string message = 2;
 }
