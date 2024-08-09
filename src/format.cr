@@ -8,14 +8,16 @@ struct Woozy::Format
     label = entry.severity.label
 
     severity = case entry.severity
-    when .trace?  then " #{label}".ljust(7).colorize(:white).back(:magenta).italic.to_s
-    when .debug?  then " #{label}".ljust(7).colorize(:light_cyan).to_s
-    when .info?   then " #{label}".ljust(7)
-    when .notice? then " NOTE".ljust(7).colorize(:light_yellow).to_s
-    when .warn?   then " #{label}".ljust(7).colorize(255, 135, 0).to_s
-    when .error?  then " #{label}".ljust(7).colorize(:light_red).to_s
-    when .fatal?  then " #{label}".ljust(7).colorize(:black).back(:red).bold.to_s
-    end
+               when .trace?  then " #{label} ".colorize(:white).back(:magenta).italic
+               when .debug?  then " #{label} ".colorize(:light_cyan)
+               when .info?   then " #{label}  "
+               when .notice? then " NOTE  ".colorize(:light_yellow)
+               when .warn?   then " #{label}  ".colorize(255, 135, 0)
+               when .error?  then " #{label} ".colorize(:light_red)
+               when .fatal?  then " #{label} ".colorize(:black).back(:red).bold
+               end
+
+    severity = severity.to_s
 
     io << '['
     io << entry.timestamp.time_of_day
@@ -35,6 +37,7 @@ struct Woozy::Format
 
     if exception = entry.exception
       io << exception.message
+      io << ' '
       io << '('
       io << exception.class.name
       io << ')'
@@ -52,7 +55,7 @@ struct Woozy::Format
         io << '\n'
         io << '-'
         io << ' '
-        unless name.to_s.starts_with?('u')
+        unless name.to_s.starts_with?('u') && name.to_s.size == 2 && name.to_s[1].ascii_number?
           io << "#{name}:".to_s.ljust(max_size + 1)
           io << ' '
         end

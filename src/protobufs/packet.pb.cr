@@ -24,6 +24,7 @@ module Woozy
     
     contract_of "proto2" do
       optional :username, :string, 1
+      optional :password, :string, 2
     end
   end
   
