@@ -1,10 +1,21 @@
 require "colorize"
-require "log"
 
-struct Woozy::Format
-  extend Log::Formatter
+class Woozy::ConsoleOutputActor
+  def initialize(@change_channel : Channel(ConsoleInputActor::Change), @log_channel : Channel(Log::Entry))
+    @self_stop_channel = Channel(Nil).new
+    @input = ""
+    @cursor = 0
+  end
 
-  def self.format(entry : Log::Entry, io : IO)
+  def clear_input(io) : Nil
+    io << "\e[2K\r"
+  end
+
+  def print_input(io) : Nil
+    io << "> #{@input}\r\e[#{2 + @cursor}C"
+  end
+
+  def format(io : IO, entry : Log::Entry) : Nil
     label = entry.severity.label
 
     severity = case entry.severity
@@ -16,8 +27,6 @@ struct Woozy::Format
                when .error?  then " #{label} ".colorize(:light_red)
                when .fatal?  then " #{label} ".colorize(:black).back(:red).bold
                end
-
-    severity = severity.to_s
 
     io << '['
     io << entry.timestamp.time_of_day
@@ -72,5 +81,32 @@ struct Woozy::Format
         end
       end
     end
+
+    io << '\n'
+  end
+
+  def start : Nil
+    io = STDOUT
+
+    loop do
+      select
+      when @self_stop_channel.receive
+        self.clear_input(io)
+        break
+      when change = @change_channel.receive
+        @input = change.input
+        @cursor = change.cursor
+        self.clear_input(io)
+        self.print_input(io)
+      when entry = @log_channel.receive
+        self.clear_input(io)
+        self.format(io, entry)
+        self.print_input(io)
+      end
+    end
+  end
+
+  def stop : Nil
+    @self_stop_channel.send(nil)
   end
 end

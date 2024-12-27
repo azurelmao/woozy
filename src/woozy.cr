@@ -3,16 +3,26 @@ require "openssl"
 require "./**"
 
 module Woozy
-  Id = Namespace.for("woozy")
+  class ChannelBackend < Log::Backend
+    def initialize(dispatch_mode : Log::DispatchMode, @log_channel : Channel(Log::Entry))
+      @dispatcher = Log::Dispatcher.for(dispatch_mode)
+    end
 
-  Log.setup do |log|
-    dispatcher = Log::DispatchMode::Sync
-    backend = Log::IOBackend.new(dispatcher: dispatcher, formatter: Format)
-
-    log.bind "*", :trace, backend
+    def write(entry : Log::Entry)
+      @log_channel.send(entry)
+    end
   end
 
-  def self.set_terminal_mode : Nil
+  def self.setup_logs(log_channel : Channel(Log::Entry)) : Nil
+    Log.setup do |log|
+      dispatch_mode = Log::DispatchMode::Async
+      backend = ChannelBackend.new(dispatch_mode, log_channel)
+
+      log.bind "*", :trace, backend
+    end
+  end
+
+  def self.setup_terminal_mode : Nil
     before = Crystal::System::FileDescriptor.tcgetattr STDIN.fd
     mode = before
     mode.c_lflag &= ~LibC::ICANON
@@ -47,57 +57,25 @@ module Woozy
     true
   end
 
-  def self.parse_config_value(value : String)
-    case value
-    when "true" then true
-    when "false" then false
-    when .to_i? then value.to_i
-    when .to_f? then value.to_f
-    else
-      nil
-    end
-  end
-
-  struct Packet
-    MaxSize = 64
-
-    def to_slice : Bytes
-      self.timestamp = Time.utc.to_unix_f
-      self.to_protobuf.to_slice
-    end
-
-    def self.from_bytes(bytes : Bytes) : Packet
-      Packet.from_protobuf(IO::Memory.new(bytes))
-    end
-
-    {% begin %}
-    {% packets = ::Protobuf::Message.includers.select { |t| t.name.starts_with?("Woozy") && t.name.stringify != "Woozy::Packet" } %}
-
-    alias Packets = Union({{packets.splat}})
-
-    {% for packet in packets %}
-      def self.new(packet : {{packet.id}})
-        Packet.new {{packet.name.split("::").last.underscore.id}}: packet
-      end
-    {% end %}
-    {% end %}
+  def self.highlight_error(object)
+    object.colorize(:red).underline.italic
   end
 end
 
 class TCPSocket
-  def send(packet : Woozy::Packet::Packets)
-    self.send(Woozy::Packet.new(packet).to_slice)
+  def send(packet : Woozy::Packet)
+    self.send(packet.to_slice)
   end
 end
 
 class OpenSSL::SSL::Socket::Server
-  def write(packet : Woozy::Packet::Packets)
-    self.write(Woozy::Packet.new(packet).to_slice)
+  def write(packet : Woozy::Packet)
+    self.write(packet.to_slice)
   end
 end
 
 class OpenSSL::SSL::Socket::Client
-  def write(packet : Woozy::Packet::Packets)
-    self.write(Woozy::Packet.new(packet).to_slice)
+  def write(packet : Woozy::Packet)
+    self.write(packet.to_slice)
   end
 end
